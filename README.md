@@ -1,5 +1,6 @@
 # mobile-test-scripts
 This is a demo to show how to build a simple automation frameowrk for mobile app.
+# framework: android emulator + appium + pytest + selenium
 
 You will see:
 ## 1. how to star appium driver in local
