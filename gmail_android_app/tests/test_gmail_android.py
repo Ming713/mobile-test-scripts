@@ -8,114 +8,53 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
 
+from gmail_android_app.common.driver_manager import DriverManager
+from gmail_android_app.pageobjects.base_test import BaseTest
+from gmail_android_app.pageobjects.inbox_page import InboxPage
+from gmail_android_app.pageobjects.welcome_page import WelcomePage
+
+
 
 @pytest.mark.smoke
-class GmailAppTestAndroid(unittest.TestCase):
+class GmailAppTestAndroid():
 
-    # define and start driver
     def test_gmail_login(self):
-        caps = {
-            "deviceName": "Pixel 2 API 29",
-            "platformName": "Android",
-            "appPackage": "com.google.android.gm",
-            "appActivity": "ConversationListActivityGmail",
-            "appiumVersion": "1.13.0",
-            "deviceOrientation": "portrait",
-            "deviceType": "phone",
-            "newCommandTimeout": 600,
-            "platformVersion": "10",
-            "app": "/Users/mingli/autotestestexercise/mobile-test-scripts/gmail_android_app/resources/applications/android/gmail.apk",
-            "autoGrantPermissions": True
-        }
-
-        driver = webdriver.Remote(desired_capabilities=caps,
-                                  command_executor='http://127.0.0.1:4723/wd/hub')
 
         # click 'GOT IT' button in welcome page
-        driver.find_element_by_id("com.google.android.gm:id/welcome_tour_got_it").click()
+        welcomepage = WelcomePage()
+        inbox_page = InboxPage(driver=welcomepage.driver)
+        welcomepage.click_welcome_tour_got_it()
 
         # add an email address
-        driver.find_element_by_id("com.google.android.gm:id/setup_addresses_add_another").click()
+        welcomepage.setup_email_address()
 
         # click Google icon to setup gmail account
-        driver.find_element_by_xpath("//*[@text='Google']").click()
-
-        WebDriverWait(driver, 60, ignored_exceptions=[StaleElementReferenceException]).\
-            until(expected_conditions.visibility_of_element_located((By.ID,"identifierId")))
+        welcomepage.click_google_to_setup_gmail_account()
 
         # fill in gamil account
-        driver.find_element_by_id("identifierId").send_keys("kemanli137@gmail.com")
-
-        driver.find_element_by_id("identifierNext").click()
-
-        WebDriverWait(driver, 30, ignored_exceptions=[StaleElementReferenceException]).until(
-            expected_conditions.visibility_of_element_located((By.ID, "password")))
+        welcomepage.fill_in_email(self.test_accounts[0]["email"])
 
         # fill in password
-        driver.find_element_by_id("password").send_keys("901()!qwe")
-
-        driver.find_element_by_id("passwordNext").click()
-
-        WebDriverWait(driver, 30, ignored_exceptions=[StaleElementReferenceException]).until(
-            expected_conditions.visibility_of_element_located((By.XPATH, "//*[@text='I agree']")))
+        welcomepage.fill_in_password(self.test_accounts[0]["password"])
 
         # accept some terms
-        driver.find_element_by_xpath("//*[@text='I agree']").click()
+        welcomepage.click_i_agree_button()
 
-        WebDriverWait(driver, 30, ignored_exceptions=[StaleElementReferenceException]).until(
-            expected_conditions.visibility_of_element_located((By.XPATH, "//*[@text='MORE']")))
+        welcomepage.click_more_button()
 
-        driver.find_element_by_xpath("//*[@text='MORE']").click()
-
-        WebDriverWait(driver, 30, ignored_exceptions=[StaleElementReferenceException]).until(
-            expected_conditions.visibility_of_element_located((By.XPATH, "//*[@text='ACCEPT']")))
-
-        driver.find_element_by_xpath("//*[@text='ACCEPT']").click()
-
+        welcomepage.click_accept_button()
 
         # enter Gmail
-        WebDriverWait(driver, 30, ignored_exceptions=[StaleElementReferenceException]).until(
-            expected_conditions.visibility_of_element_located((By.XPATH,"//*[@text='TAKE ME TO GMAIL']")))
-
-        driver.find_element_by_xpath("//*[@text='TAKE ME TO GMAIL']").click()
-
-        try:
-            WebDriverWait(driver, 10, ignored_exceptions=[StaleElementReferenceException]).until(
-                expected_conditions.visibility_of_element_located((By.XPATH, "//*[@text='OK']")))
-
-            time.sleep(1)
-            driver.find_element_by_xpath("//*[@text='OK']").click()
-
-            WebDriverWait(driver, 30, ignored_exceptions=[StaleElementReferenceException]).until(
-                expected_conditions.visibility_of_element_located((By.XPATH,"//*[@text='TAKE ME TO GMAIL']")))
-
-            time.sleep(1)
-            driver.find_element_by_xpath("//*[@text='TAKE ME TO GMAIL']").click()
-        except NoSuchElementException as e:
-            print(e)
-
-        WebDriverWait(driver, 30, ignored_exceptions=[StaleElementReferenceException]).\
-            until(expected_conditions.visibility_of_element_located((By.XPATH,"//*[@text='Next']")))
+        welcomepage.click_take_me_to_gmail()
 
         # click Next button in welcome wizzard
-        driver.find_element_by_xpath("//*[@text='Next']").click()
-
-        WebDriverWait(driver, 30, ignored_exceptions=[StaleElementReferenceException]).\
-            until(expected_conditions.visibility_of_element_located((By.XPATH,"//*[@text='OK']")))
+        inbox_page.click_next_in_inbox_page()
 
         #  click OK button in welcome wizzard
-        driver.find_element_by_xpath("//*[@text='OK']").click()
-
-        WebDriverWait(driver, 30, ignored_exceptions=[StaleElementReferenceException]).\
-            until(expected_conditions.visibility_of_element_located((By.XPATH,"//android.widget.ImageButton[@content-desc='Open navigation drawer']")))
+        inbox_page.click_ok_in_inbox_page()
 
         # click Main menu
-        driver.find_element_by_xpath("//android.widget.ImageButton[@content-desc='Open navigation drawer']").click()
-
-        WebDriverWait(driver, 30, ignored_exceptions=[StaleElementReferenceException]).\
-            until(expected_conditions.visibility_of_element_located((By.ID, "com.google.android.gm:id/conversation_list_folder_header")))
-
-        driver.find_element_by_xpath("//*[@content-desc='Gmail']")
+        inbox_page.open_main_menu()
 
         # asseert to enter Gmail box
-        self.assertTrue(driver.find_element_by_xpath("//*[@text='Gmail']").text == 'Gmail', "not enter Gmail")
+        self.assertTrue(inbox_page.check_text_of_menu_title("Gmail"), 'not enter Gmail')
